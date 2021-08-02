@@ -8,31 +8,28 @@ import {
 } from '../../../_metronic/_partials/controls'
 import { RDSModal } from './modals'
 import TableFilter from './Table/Filter'
-import SweetAlert from 'react-bootstrap-sweetalert'
+// import SweetAlert from 'react-bootstrap-sweetalert'
+import toast, { Toaster } from 'react-hot-toast'
 
 export default function () {
   const [rdsModal, setRDSModal] = useState(false)
-  const [alert, setAlert] = useState(null)
+  // const [alert, setAlert] = useState(null)
   const [createdSuccess, setCreatedSuccess] = useState(false)
+  // const [searchString, setSearchString] = useState('')
+  // const [filterValue, setFilterValue] = useState('all')
+  const [filters, setFilters] = useState({ search: '', filter: '' })
 
   return (
     <>
-      {alert}
+      {/* {alert} */}
+      <Toaster />
 
       <RDSModal
         show={rdsModal}
         onHide={() => setRDSModal(!rdsModal)}
         onSuccess={(message) => {
           setCreatedSuccess(true)
-          setAlert(
-            <SweetAlert
-              success
-              title="Success"
-              onConfirm={() => setAlert(null)}
-            >
-              {message}
-            </SweetAlert>,
-          )
+          toast.success(message)
         }}
       />
       {/* <div className="row">
@@ -42,7 +39,20 @@ export default function () {
           <CardHeader className="px-0 mt-4">
             <div className="row col-sm-12">
               <div className="col-sm-10">
-                <TableFilter />
+                <TableFilter
+                  searchString={filters.search}
+                  filterValue={filters.filter}
+                  setSearchString={(value) => {
+                    let obj = { ...filters }
+                    obj.search = value
+                    setFilters(obj)
+                  }}
+                  setFilterValue={(value) => {
+                    let obj = { ...filters }
+                    obj.filter = value
+                    setFilters(obj)
+                  }}
+                />
               </div>
               <div className="ml-auto">
                 <button
@@ -57,7 +67,11 @@ export default function () {
           </CardHeader>
 
           <CardBody>
-            <Table reloadList={createdSuccess} />
+            <Table
+              reloadList={createdSuccess}
+              // searchString={searchString}
+              filters={filters}
+            />
           </CardBody>
         </Card>
       </div>

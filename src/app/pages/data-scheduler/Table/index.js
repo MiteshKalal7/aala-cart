@@ -24,7 +24,7 @@ export default function Table() {
   const [dataLogsModal, setDataLogsModal] = useState(false)
   const [schedulerModal, setSchedulerModal] = useState(false)
   const [syncWith, setSyncWith] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [selectedRow, setSelectedRow] = useState({})
   const [data_, setData] = useState([])
   const [alert, setAlert] = useState(null)

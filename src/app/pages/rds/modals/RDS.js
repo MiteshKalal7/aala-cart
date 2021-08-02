@@ -58,7 +58,7 @@ export default function ({ show, onHide, edit = false, data, onSuccess }) {
         password,
         is_default: isDefault,
       }
-      console.log('object', body)
+      // console.log('object', body)
 
       fetch(`${API_URL}rds${data ? '/' + data.id : ''}`, {
         method: data ? 'PUT' : 'POST',

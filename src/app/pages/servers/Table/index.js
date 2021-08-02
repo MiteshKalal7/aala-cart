@@ -17,8 +17,13 @@ import SweetAlert from 'react-bootstrap-sweetalert'
 import Loader from '../../../components/Loader'
 import SVG from 'react-inlinesvg'
 import { API_URL } from '../../../config'
+import { useHistory } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 export default function Table() {
+  const history = useHistory()
+  const { authToken } = useSelector((state) => state.auth)
+
   const [sizePerPage, setSizePerPage] = useState(5)
   const [userListModal, seUserListModal] = useState(false)
   const [userModal, setServerModal] = useState(false)
@@ -77,20 +82,25 @@ export default function Table() {
   // }
 
   const getTableRecords = () => {
-    fetch(`${API_URL}server`)
+    const params = ''
+    fetch(`${API_URL}server${params}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+    })
       .then((res) => res.json())
       .then((res) => {
         setLoading(false)
-        if (res.code) {
+        if (res.code === '200') {
           setData(res.data)
-        } else {
-          // alert(res.message)
+        } else if (res.status === 401) {
+          history.push('/logout')
         }
       })
       .catch((err) => {
         setLoading(false)
-
-        console.log(err)
       })
   }
 
