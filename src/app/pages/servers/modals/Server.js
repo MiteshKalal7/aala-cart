@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Spinner } from 'react-bootstrap'
 import { API_URL } from '../../../config'
+import { useSelector } from 'react-redux'
 
-export default function ({ show, onHide, data, edit = false, onSuccess }) {
+export default function ({
+  show,
+  onHide,
+  data,
+  edit = false,
+  onSuccess,
+  onError,
+}) {
+  const { authToken } = useSelector((state) => state.auth)
+
   const [errors, setErrors] = useState({})
   const [sending, setSending] = useState(false)
   // const [alert, setAlert] = useState(null)
@@ -18,8 +28,9 @@ export default function ({ show, onHide, data, edit = false, onSuccess }) {
       setName(data.name)
       setIpAddress(data.ip_address)
       setInstanceType(data.instance_type)
-      setPublicIpAddress(data.puplic_ip_address)
+      setPublicIpAddress(data.public_ip_address)
       setPlatform(data.platform)
+      setIsDefault(data.is_default)
     }
   }, [data])
 
@@ -39,18 +50,17 @@ export default function ({ show, onHide, data, edit = false, onSuccess }) {
       const body = {
         name: name,
         ip_address: ipAddress,
-        puplic_ip_address: publicIpAddress,
+        public_ip_address: publicIpAddress,
         instance_type: instanceType,
         platform: platform,
         is_default: isDefault,
       }
-      console.log('object', body)
-      fetch(`${API_URL}server`, {
-        method: 'POST',
-        credentials: 'include',
+      fetch(`${API_URL}server${data ? '/' + data.id : ''}`, {
+        method: data ? 'PUT' : 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(body),
       })
@@ -58,13 +68,14 @@ export default function ({ show, onHide, data, edit = false, onSuccess }) {
         .then((res) => {
           setSending(false)
           onHide()
-          onSuccess(name)
-          console.log(res)
+          if (res.status) {
+            onSuccess(res.message, res.data)
+          } else {
+            onError(res.message)
+          }
         })
         .catch((err) => {
           setSending(false)
-          onHide()
-          onSuccess(name)
           console.log(err)
         })
     }
@@ -184,9 +195,11 @@ export default function ({ show, onHide, data, edit = false, onSuccess }) {
                   setIsDefault(e.target.value)
                 }}
               >
-                <option value="1">Yes</option>
-                <option value="0" selected={isDefault === '0' && true}>
+                <option value="0" selected={isDefault == '0' && true}>
                   No
+                </option>
+                <option value="1" selected={isDefault == '1' && true}>
+                  Yes
                 </option>
               </select>
             </div>

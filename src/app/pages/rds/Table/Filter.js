@@ -1,12 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 export default function (props) {
-  // const [searchString, setSearchString] = useState('')
-
-  // useEffect(() => {
-
-  // }, [searchString])
-
   return (
     <>
       <div className="row">

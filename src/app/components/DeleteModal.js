@@ -1,13 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Modal, Spinner } from 'react-bootstrap'
-import { API_URL } from '../../../config'
+import { API_URL } from '../config'
 
-export default function ({ id, show, onHide, authToken, onSuccess, onFailed }) {
+export default function ({
+  id,
+  show,
+  onHide,
+  authToken,
+  onSuccess,
+  onFailed,
+  api,
+  title = 'Delete Record',
+  message = 'Are you sure to permanently delete this Record?',
+}) {
   const [sending, setSending] = useState(false)
 
-  const deleteCustomer = () => {
+  const deleteRecord = () => {
     setSending(true)
-    fetch(`${API_URL}rds/${id}`, {
+    fetch(`${API_URL}${api}/${id}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
@@ -39,10 +49,10 @@ export default function ({ id, show, onHide, authToken, onSuccess, onFailed }) {
       aria-labelledby="example-modal-sizes-title-lg"
     >
       <Modal.Header closeButton>
-        <Modal.Title id="example-modal-sizes-title-lg">RDS Delete</Modal.Title>
+        <Modal.Title id="example-modal-sizes-title-lg">{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <span>Are you sure to permanently delete this RDS?</span>
+        <span>{message}</span>
       </Modal.Body>
       <Modal.Footer>
         <div>
@@ -56,7 +66,7 @@ export default function ({ id, show, onHide, authToken, onSuccess, onFailed }) {
           <> </>
           <button
             type="button"
-            onClick={deleteCustomer}
+            onClick={deleteRecord}
             disabled={sending}
             className="btn btn-danger btn-elevate"
           >

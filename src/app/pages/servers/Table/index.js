@@ -3,43 +3,92 @@ import BootstrapTable from 'react-bootstrap-table-next'
 import paginationFactory, {
   PaginationProvider,
 } from 'react-bootstrap-table2-paginator'
+import cellEditFactory from 'react-bootstrap-table2-editor'
 import {
   PleaseWaitMessage,
   sortCaret,
   headerSortingClasses,
   toAbsoluteUrl,
-} from './../../../../_metronic/_helpers'
-import { Pagination } from './../../../../_metronic/_partials/controls'
-import cellEditFactory from 'react-bootstrap-table2-editor'
-import { data as data_ } from './_data'
-import { UserListModal, ServerModal } from './../modals'
-import SweetAlert from 'react-bootstrap-sweetalert'
-import Loader from '../../../components/Loader'
-import SVG from 'react-inlinesvg'
-import { API_URL } from '../../../config'
-import { useHistory } from 'react-router-dom'
+} from '../../../../_metronic/_helpers'
+import { Pagination } from '../../../../_metronic/_partials/controls'
+// import SweetAlert from 'react-bootstrap-sweetalert'
+import { UserListModal, ServerModal } from '../modals'
+// import { data as _data } from './_data'
 import { useSelector } from 'react-redux'
+import SVG from 'react-inlinesvg'
+import { Loader, DeleteModal } from '../../../components'
+import { API_URL, convertDate, timeSince } from '../../../config'
+import { useHistory } from 'react-router-dom'
+import toast, { Toaster } from 'react-hot-toast'
 
-export default function Table() {
+export default function Table(props) {
   const history = useHistory()
   const { authToken } = useSelector((state) => state.auth)
 
-  const [sizePerPage, setSizePerPage] = useState(5)
-  const [userListModal, seUserListModal] = useState(false)
-  const [userModal, setServerModal] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState(data_)
-  const [alert, setAlert] = useState(null)
+  const [sizePerPage, setSizePerPage] = useState(20)
+  const [userListModal, setUserListModal] = useState(false)
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [serverModal, setServerModal] = useState(false)
   const [selectedRow, setSelectedRow] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState([])
+  // const [userModal, setServerModal] = useState(false)
+
+  // const [alert, setAlert] = useState(null)
 
   // document.searchFunction = (key) => {
   //   const value = document.getElementById(key)
   //   console.log(key + ' = ' + value.value)
   // }
 
+  // useEffect(() => {
+  //   getTableRecords()
+  // }, [])
+
+  // useEffect(() => {
+  // if (props.searchString.length > 3) {
+  //   setLoading(true)
+  //   getTableRecords(props.searchString)
+  // } else if (props.searchString.length === 0) {
+  //   setLoading(true)
+  //   getTableRecords('')
+  // }
+  // }, [props.searchString])
+
   useEffect(() => {
+    setLoading(true)
     getTableRecords()
-  }, [])
+    // if (props.filters) {
+    //   let search = props.filters.search
+    //   let filter = props.filters.filter
+    //   let param = `?is_default=${filter}`
+    //   if (search.length > 3) {
+    //     param += `&filter_value=${search}`
+    //     getTableRecords(param)
+    //   } else {
+    //     setLoading(true)
+    //   }
+    // }
+  }, [props.filters])
+
+  const getParams = () => {
+    let filter = props.filters.filter
+    let param = `?is_default=${filter}`
+    if (props.filters) {
+      let search = props.filters.search
+      if (search.length) {
+        param += `&filter_value=${search}`
+      }
+    }
+    return param
+  }
+
+  useEffect(() => {
+    if (props.reloadList) {
+      setLoading(true)
+      getTableRecords()
+    }
+  }, [props.reloadList])
 
   // useEffect(() => {
   //   if (!loading) appendTableHeader()
@@ -51,38 +100,40 @@ export default function Table() {
   //   d1.insertAdjacentHTML(
   //     'beforeend',
   //     ` <tr>
+  //     <tr>
   //     <td></td>
   //     <td><input
-  //           id="searchServer"
+  //      id="searchName"
   //           type="text"
   //           class="form-control form-control-sm"
-  //           onInput="document.searchFunction('searchServer')">
-  //           </td>
+  //           onInput="document.searchFunction('searchName')"
+  //     ></td>
+  //     <td></td>
+  //     <td></td>
+  //     <td></td>
   //     <td></td>
   //     <td><input
-  //           id="searchInstanceType"
+  //      id="searchDatabase"
   //           type="text"
   //           class="form-control form-control-sm"
-  //           onInput="document.searchFunction('searchInstanceType')">
-  //           </td>
-  //     <td></td>
-  //     <td><input
-  //           id="searchPlatform"
-  //           type="text"
-  //           class="form-control form-control-sm"
-  //           onInput="document.searchFunction('searchPlatform')">
-  //           </td>
+  //           onInput="document.searchFunction('searchDatabase')"
+  //     ></td>
   //     <td></td>
   //     <td></td>
   //     <td></td>
   //     <td></td>
-  //     <td></td>
+  // </tr>
   // </tr>`,
   //   )
   // }
 
-  const getTableRecords = () => {
-    const params = ''
+  const getTableRecords = async () => {
+    // let params = ''
+    // if (search) {
+    //   params = `?filter_value=${search}`
+    // }
+    const params = await getParams()
+
     fetch(`${API_URL}server${params}`, {
       method: 'GET',
       headers: {
@@ -104,32 +155,60 @@ export default function Table() {
       })
   }
 
-  const deleteRecordAlert = (id, name) => {
-    setAlert(
-      <SweetAlert
-        danger
-        showCancel
-        confirmBtnText="Yes, delete it!"
-        confirmBtnBsStyle="danger"
-        title="Are you sure?"
-        onConfirm={() => setAlert(null)}
-        onCancel={() => setAlert(null)}
-      >
-        You want to delete <b>{name}</b>
-      </SweetAlert>,
-    )
-  }
+  // const deleteRecord = (id) => {
+
+  // }
+
+  // const deleteRecordAlert = (id, name) => {
+  //   setAlert(
+  //     <SweetAlert
+  //       danger
+  //       showCancel
+  //       confirmBtnText="Yes, delete it!"
+  //       confirmBtnBsStyle="danger"
+  //       title="Are you sure?"
+  //       onConfirm={() => deleteRecord(id)}
+  //       onCancel={() => setAlert(null)}
+  //     >
+  //       You want to delete <b>{name}</b>
+  //     </SweetAlert>,
+  //   )
+  // }
 
   const changeIsDefault = (id, status) => {
-    const result = [...data]
-    result.map((item) => {
-      if (item.id === id) {
-        item.is_default = status
-      } else {
-        item.is_default = false
-      }
+    setLoading(true)
+    fetch(`${API_URL}server/${id}`, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ is_default: status }),
     })
-    setData(result)
+      .then((res) => res.json())
+      .then((res) => {
+        // setLoading(false)
+        if (res.status) {
+          getTableRecords()
+          toast.success(res.message)
+        } else {
+          toast.error(res.message)
+        }
+      })
+      .catch((err) => {
+        setLoading(false)
+        // onHide()
+      })
+    // const result = [...data]
+    // result.map((item) => {
+    //   if (item.id === id) {
+    //     item.is_default = status
+    //   } else {
+    //     item.is_default = false
+    //   }
+    // })
+    // setData(result)
   }
 
   const columns = [
@@ -149,6 +228,15 @@ export default function Table() {
       headerStyle: () => {
         return { minWidth: '150px' }
       },
+      validator: (newValue, row) => {
+        if (newValue !== row.name) {
+          toast.promise(editInLineRow({ name: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'RDS Credentials Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
+      },
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -161,21 +249,51 @@ export default function Table() {
       headerStyle: () => {
         return { minWidth: '130px' }
       },
+      validator: (newValue, row) => {
+        if (newValue !== row.ip_address) {
+          toast.promise(editInLineRow({ ip_address: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'RDS Credentials Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
+      },
       headerSortingClasses,
     },
     {
       dataField: 'instance_type',
       text: 'Instance Type',
       sort: true,
+      validator: (newValue, row) => {
+        if (newValue !== row.instance_type) {
+          toast.promise(editInLineRow({ instance_type: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'RDS Credentials Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
+      },
       sortCaret: sortCaret,
       headerSortingClasses,
     },
     {
-      dataField: 'puplic_ip_address',
+      dataField: 'public_ip_address',
       text: 'Public IP Address',
       sort: true,
       headerStyle: () => {
         return { minWidth: '150px' }
+      },
+      validator: (newValue, row) => {
+        if (newValue !== row.public_ip_address) {
+          toast.promise(
+            editInLineRow({ public_ip_address: newValue }, row.id),
+            {
+              loading: 'Saving...',
+              success: 'RDS Credentials Updated',
+              error: <b>Could not save.</b>,
+            },
+          )
+        }
       },
       sortCaret: sortCaret,
       // formatter: (_, row) => <span class="d-flex">lorem ipsum</span>,
@@ -185,6 +303,15 @@ export default function Table() {
       text: 'Platform',
       headerStyle: () => {
         return { minWidth: '150px' }
+      },
+      validator: (newValue, row) => {
+        if (newValue !== row.platform) {
+          toast.promise(editInLineRow({ platform: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'RDS Credentials Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
       },
       sort: true,
       sortCaret: sortCaret,
@@ -227,7 +354,8 @@ export default function Table() {
         <a
           href="#"
           onClick={() => {
-            seUserListModal(true)
+            setSelectedRow(row)
+            setUserListModal(true)
           }}
         >
           <u>
@@ -241,8 +369,15 @@ export default function Table() {
       text: 'Created At',
       editable: false,
       headerStyle: () => {
-        return { minWidth: '120px' }
+        return { minWidth: '130px' }
       },
+      formatter: (_, row) => (
+        <div>
+          <span>{convertDate(row.created_at)}</span>
+          <br />
+          <span className="timeStampColor">({timeSince(row.created_at)})</span>
+        </div>
+      ),
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -252,8 +387,15 @@ export default function Table() {
       text: 'Updated At',
       editable: false,
       headerStyle: () => {
-        return { minWidth: '120px' }
+        return { minWidth: '135px' }
       },
+      formatter: (_, row) => (
+        <div>
+          <span>{convertDate(row.updated_at)}</span>
+          <br />
+          <span className="timeStampColor">({timeSince(row.updated_at)})</span>
+        </div>
+      ),
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -283,7 +425,10 @@ export default function Table() {
           <a
             title="Delete Server"
             className="btn btn-icon btn-light btn-hover-danger btn-sm"
-            onClick={() => deleteRecordAlert(row.id, row.name)}
+            onClick={() => {
+              setSelectedRow(row)
+              setDeleteModal(true)
+            }}
           >
             <span className="svg-icon svg-icon-md svg-icon-danger">
               <SVG src={toAbsoluteUrl('/media/svg/icons/General/Trash.svg')} />
@@ -305,9 +450,9 @@ export default function Table() {
     totalSize: data.length,
     sizePerPage: sizePerPage,
     sizePerPageList: [
-      { text: '3', value: 3 },
-      { text: '5', value: 5 },
-      { text: '10', value: 10 },
+      { text: '20', value: 20 },
+      { text: '50', value: 50 },
+      { text: '100', value: 100 },
     ],
     page: 1,
     onSizePerPageChange: (e) => {
@@ -315,29 +460,85 @@ export default function Table() {
     },
   }
 
+  const replaceTableRow = (object, remove = false) => {
+    let newArray = []
+    data.map((item) => {
+      if (item.id === object.id) {
+        if (!remove) newArray.push(object)
+      } else {
+        newArray.push(item)
+      }
+    })
+    setData(newArray)
+  }
+
+  const editInLineRow = async (body, id) => {
+    // setLoading(true)
+    return await fetch(`${API_URL}server/${id}`, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify(body),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        // setLoading(false)
+        if (res.status) {
+          // toast.success(res.message)
+          // console.log(res)
+        } else {
+          toast.error(res.message)
+        }
+      })
+      .catch((err) => {
+        setLoading(false)
+      })
+  }
+
   return (
     <>
-      {alert}
+      {/* {alert} */}
+      <Toaster />
+
       <UserListModal
+        authToken={authToken}
+        id={selectedRow.id}
         show={userListModal}
-        onHide={() => seUserListModal(!userListModal)}
+        onHide={() => setUserListModal(!userListModal)}
       />
-      <ServerModal
-        show={userModal}
-        onHide={() => setServerModal(!userModal)}
-        edit={true}
-        data={selectedRow}
-        onSuccess={(name) =>
-          setAlert(
-            <SweetAlert
-              success
-              title="Success"
-              onConfirm={() => setAlert(null)}
-            >
-              <b>{name}</b> Edited successfully.
-            </SweetAlert>,
-          )
-        }
+      {serverModal && (
+        <ServerModal
+          show={serverModal}
+          onHide={() => setServerModal(!serverModal)}
+          edit={true}
+          data={selectedRow}
+          onSuccess={(message, object) => {
+            toast.success(message)
+            replaceTableRow(object)
+          }}
+          onError={(message) => {
+            toast.error(message)
+          }}
+        />
+      )}
+      <DeleteModal
+        show={deleteModal}
+        api="server"
+        title="Delete Server"
+        message="Are you sure to permanently delete this Server?"
+        onHide={() => setDeleteModal(!deleteModal)}
+        id={selectedRow.id}
+        authToken={authToken}
+        onSuccess={(message) => {
+          toast.success(message)
+          replaceTableRow({ id: selectedRow.id }, true)
+        }}
+        onFailed={(message) => {
+          toast.error(message)
+        }}
       />
       {loading ? (
         <Loader />
@@ -345,7 +546,7 @@ export default function Table() {
         <PaginationProvider pagination={paginationFactory(paginationOptions)}>
           {({ paginationProps, paginationTableProps }) => {
             return (
-              <Pagination isLoading={loading} paginationProps={paginationProps}>
+              <Pagination isLoading={false} paginationProps={paginationProps}>
                 <BootstrapTable
                   wrapperClasses="table-responsive"
                   bordered={false}
@@ -360,12 +561,12 @@ export default function Table() {
                     blurToSave: true,
                   })}
                   noDataIndication={() => {
-                    return <div>No Data to Display</div>
+                    return 'No Data to Display'
                   }}
                   defaultSorted={[{ dataField: 'id', order: 'asc' }]}
                   {...paginationTableProps}
                 >
-                  <PleaseWaitMessage entities={data} />
+                  {/* <PleaseWaitMessage entities={data} /> */}
                 </BootstrapTable>
               </Pagination>
             )

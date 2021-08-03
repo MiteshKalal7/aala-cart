@@ -3,7 +3,14 @@ import { Modal, Spinner } from 'react-bootstrap'
 import { API_URL } from '../../../config'
 import { useSelector } from 'react-redux'
 
-export default function ({ show, onHide, edit = false, data, onSuccess }) {
+export default function ({
+  show,
+  onHide,
+  data,
+  onSuccess,
+  onError,
+  edit = false,
+}) {
   const { authToken } = useSelector((state) => state.auth)
 
   const [errors, setErrors] = useState({})
@@ -58,7 +65,6 @@ export default function ({ show, onHide, edit = false, data, onSuccess }) {
         password,
         is_default: isDefault,
       }
-      // console.log('object', body)
 
       fetch(`${API_URL}rds${data ? '/' + data.id : ''}`, {
         method: data ? 'PUT' : 'POST',
@@ -76,7 +82,7 @@ export default function ({ show, onHide, edit = false, data, onSuccess }) {
           if (res.status) {
             onSuccess(res.message, res.data)
           } else {
-            window.alert(res.message)
+            onError(res.message)
           }
         })
         .catch((err) => {

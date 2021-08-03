@@ -42,6 +42,16 @@
 //   padding: 0rem 1.5rem 1.75rem !important;
 // }
 
+.react-bootstrap-table-editing-cell input {
+  // background-color: lime !important;
+  height: 32px !important;
+}
+
+.timeStampColor {
+  color: gray;
+  font-size: 11px;
+}
+
 .table.table-head-custom thead tr,
 .table.table-head-custom thead th {
   color: unset !important;

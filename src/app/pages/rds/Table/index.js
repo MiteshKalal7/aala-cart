@@ -5,19 +5,18 @@ import paginationFactory, {
 } from 'react-bootstrap-table2-paginator'
 import cellEditFactory from 'react-bootstrap-table2-editor'
 import {
-  PleaseWaitMessage,
   sortCaret,
   headerSortingClasses,
   toAbsoluteUrl,
 } from '../../../../_metronic/_helpers'
 import { Pagination } from '../../../../_metronic/_partials/controls'
 // import SweetAlert from 'react-bootstrap-sweetalert'
-import { UserListModal, RDSModal, DeleteModal } from '../modals'
+import { UserListModal, RDSModal } from '../modals'
 // import { data as _data } from './_data'
 import { useSelector } from 'react-redux'
 import SVG from 'react-inlinesvg'
-import Loader from '../../../components/Loader'
-import { API_URL } from '../../../config'
+import { Loader, DeleteModal } from '../../../components'
+import { API_URL, convertDate, timeSince } from '../../../config'
 import { useHistory } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -56,17 +55,6 @@ export default function Table(props) {
   useEffect(() => {
     setLoading(true)
     getTableRecords()
-    // if (props.filters) {
-    //   let search = props.filters.search
-    //   let filter = props.filters.filter
-    //   let param = `?is_default=${filter}`
-    //   if (search.length > 3) {
-    //     param += `&filter_value=${search}`
-    //     getTableRecords(param)
-    //   } else {
-    //     setLoading(true)
-    //   }
-    // }
   }, [props.filters])
 
   const getParams = () => {
@@ -229,9 +217,6 @@ export default function Table(props) {
       sort: true,
       cellEdit: { blurToSave: true },
       validator: (newValue, row, column) => {
-        // console.log(row)
-        // console.log(row.name)
-        // console.log(newValue)
         if (newValue !== row.name) {
           toast.promise(editInLineRow({ name: newValue }, row.id), {
             loading: 'Saving...',
@@ -376,8 +361,15 @@ export default function Table(props) {
       text: 'Created At',
       editable: false,
       headerStyle: () => {
-        return { minWidth: '120px' }
+        return { minWidth: '130px' }
       },
+      formatter: (_, row) => (
+        <div>
+          <span>{convertDate(row.created_at)}</span>
+          <br />
+          <span className="timeStampColor">({timeSince(row.created_at)})</span>
+        </div>
+      ),
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -387,8 +379,15 @@ export default function Table(props) {
       text: 'Updated At',
       editable: false,
       headerStyle: () => {
-        return { minWidth: '120px' }
+        return { minWidth: '135px' }
       },
+      formatter: (_, row) => (
+        <div>
+          <span>{convertDate(row.updated_at)}</span>
+          <br />
+          <span className="timeStampColor">({timeSince(row.updated_at)})</span>
+        </div>
+      ),
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -509,24 +508,25 @@ export default function Table(props) {
           edit={true}
           data={selectedRow}
           onSuccess={(message, object) => {
-            // setLoading(true)
             toast.success(message)
             replaceTableRow(object)
-
-            // getTableRecords()
+          }}
+          onError={(message) => {
+            toast.error(message)
           }}
         />
       )}
       <DeleteModal
         show={deleteModal}
+        api="rds"
+        title="Delete RDS"
+        message="Are you sure to permanently delete this RDS?"
         onHide={() => setDeleteModal(!deleteModal)}
         id={selectedRow.id}
         authToken={authToken}
-        onSuccess={(message, object) => {
+        onSuccess={(message) => {
           toast.success(message)
           replaceTableRow({ id: selectedRow.id }, true)
-          // setLoading(true)
-          // getTableRecords()
         }}
         onFailed={(message) => {
           toast.error(message)

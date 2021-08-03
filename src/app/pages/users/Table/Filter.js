@@ -1,14 +1,15 @@
 import React from 'react'
 
-export default function () {
+export default function ({ rdsList = [], serverList = [] }) {
   return (
     <>
       <div className="row">
         <div className="col-sm-3">
           <select className="form-control" name="rds">
             <option value="">All</option>
-            <option value="1">RDS 1</option>
-            <option value="2">RDS 2</option>
+            {rdsList.map((item) => (
+              <option value={item.id}>{item.name}</option>
+            ))}
           </select>
           <small className="form-text text-muted">
             Filter by <b>RDS</b>
@@ -17,8 +18,9 @@ export default function () {
         <div className="col-sm-3">
           <select className="form-control" name="server">
             <option value="">All</option>
-            <option value="1">Server 1</option>
-            <option value="2">Server 2</option>
+            {serverList.map((item) => (
+              <option value={item.id}>{item.name}</option>
+            ))}
           </select>
           <small className="form-text text-muted">
             Filter by <b>Server</b>

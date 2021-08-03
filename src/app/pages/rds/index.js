@@ -14,9 +14,9 @@ import toast, { Toaster } from 'react-hot-toast'
 export default function () {
   const [rdsModal, setRDSModal] = useState(false)
   // const [alert, setAlert] = useState(null)
-  const [createdSuccess, setCreatedSuccess] = useState(false)
   // const [searchString, setSearchString] = useState('')
   // const [filterValue, setFilterValue] = useState('all')
+  const [createdSuccess, setCreatedSuccess] = useState(false)
   const [filters, setFilters] = useState({ search: '', filter: '' })
 
   return (
@@ -68,8 +68,8 @@ export default function () {
 
           <CardBody>
             <Table
-              reloadList={createdSuccess}
               // searchString={searchString}
+              reloadList={createdSuccess}
               filters={filters}
             />
           </CardBody>

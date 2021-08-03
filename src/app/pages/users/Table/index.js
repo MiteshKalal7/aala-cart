@@ -16,14 +16,15 @@ import cellEditFactory from 'react-bootstrap-table2-editor'
 import Loader from '../../../components/Loader'
 import { PaymentHistoryModal, UserModal } from './../modals'
 import SVG from 'react-inlinesvg'
-import { API_URL } from '../../../config'
-import { OverlayTrigger, Tooltip, ButtonToolbar, Button } from 'react-bootstrap'
+// import { API_URL } from '../../../config'
+import { API_URL, convertDate, timeSince } from '../../../config'
 import { useHistory } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import toast, { Toaster } from 'react-hot-toast'
+import { OverlayTrigger, Tooltip, ButtonToolbar, Button } from 'react-bootstrap'
 
-export default function Table() {
+export default function Table(props) {
   const history = useHistory()
-  const { authToken } = useSelector((state) => state.auth)
+  // const { props.authToken } = useSelector((state) => state.auth)
   const [sizePerPage, setSizePerPage] = useState(5)
   const [paymentModal, setPaymentModal] = useState(false)
   const [userModal, setUserModal] = useState(false)
@@ -82,6 +83,7 @@ export default function Table() {
   // }
 
   useEffect(() => {
+    // window.alert(props.rdsList.length)
     getTableRecords()
   }, [])
 
@@ -91,7 +93,7 @@ export default function Table() {
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${props.authToken}`,
       },
     })
       .then((res) => res.json())
@@ -127,6 +129,15 @@ export default function Table() {
       headerStyle: () => {
         return { minWidth: '100px' }
       },
+      validator: (newValue, row, column) => {
+        if (newValue !== row.name) {
+          toast.promise(editInLineRow({ name: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'User Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
+      },
       formatter: (_, row) => (
         <span style={{ width: '130px' }} class="d-block">
           <div class="d-flex align-items-center">
@@ -150,6 +161,15 @@ export default function Table() {
       sortCaret: sortCaret,
       headerStyle: () => {
         return { minWidth: '150px' }
+      },
+      validator: (newValue, row, column) => {
+        if (newValue !== row.email) {
+          toast.promise(editInLineRow({ email: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'User Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
       },
       headerSortingClasses,
     },
@@ -235,6 +255,15 @@ export default function Table() {
         return { minWidth: '120px' }
       },
       sortCaret: sortCaret,
+      validator: (newValue, row, column) => {
+        if (newValue !== row.seller_name) {
+          toast.promise(editInLineRow({ seller_name: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'User Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
+      },
       // formatter: (_, row) => <span class="d-flex">lorem ipsum</span>,
     },
     {
@@ -242,6 +271,15 @@ export default function Table() {
       text: 'Contact No',
       headerStyle: () => {
         return { minWidth: '140px' }
+      },
+      validator: (newValue, row, column) => {
+        if (newValue !== row.contact_no) {
+          toast.promise(editInLineRow({ contact_no: newValue }, row.id), {
+            loading: 'Saving...',
+            success: 'User Updated',
+            error: <b>Could not save.</b>,
+          })
+        }
       },
       sort: true,
       sortCaret: sortCaret,
@@ -348,8 +386,15 @@ export default function Table() {
       text: 'Created At',
       editable: false,
       headerStyle: () => {
-        return { minWidth: '120px' }
+        return { minWidth: '130px' }
       },
+      formatter: (_, row) => (
+        <div>
+          <span>{convertDate(row.created_at)}</span>
+          <br />
+          <span className="timeStampColor">({timeSince(row.created_at)})</span>
+        </div>
+      ),
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -359,8 +404,15 @@ export default function Table() {
       text: 'Updated At',
       editable: false,
       headerStyle: () => {
-        return { minWidth: '120px' }
+        return { minWidth: '130px' }
       },
+      formatter: (_, row) => (
+        <div>
+          <span>{convertDate(row.updated_at)}</span>
+          <br />
+          <span className="timeStampColor">({timeSince(row.updated_at)})</span>
+        </div>
+      ),
       sort: true,
       sortCaret: sortCaret,
       headerSortingClasses,
@@ -431,6 +483,43 @@ export default function Table() {
     },
   }
 
+  const replaceTableRow = (object, remove = false) => {
+    let newArray = []
+    data.map((item) => {
+      if (item.id === object.id) {
+        if (!remove) newArray.push(object)
+      } else {
+        newArray.push(item)
+      }
+    })
+    setData(newArray)
+  }
+
+  const editInLineRow = async (body, id) => {
+    return await fetch(`${API_URL}user/${id}`, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${props.authToken}`,
+      },
+      body: JSON.stringify(body),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        // setLoading(false)
+        if (res.status) {
+          // toast.success(res.message)
+          // console.log(res)
+        } else {
+          toast.error(res.message)
+        }
+      })
+      .catch((err) => {
+        setLoading(false)
+      })
+  }
+
   return (
     <>
       {alert}
@@ -442,19 +531,19 @@ export default function Table() {
         show={userModal}
         onHide={() => setUserModal(!userModal)}
         edit={true}
+        authToken={props.authToken}
+        rdsList={props.rdsList}
+        serverList={props.serverList}
         data={selectedRow}
-        onSuccess={(name) =>
-          setAlert(
-            <SweetAlert
-              success
-              title="Success"
-              onConfirm={() => setAlert(null)}
-            >
-              <b>{name}</b> Edited successfully.
-            </SweetAlert>,
-          )
-        }
+        onSuccess={(message, object) => {
+          toast.success(message)
+          replaceTableRow(object)
+        }}
+        onError={(message) => {
+          toast.error(message)
+        }}
       />
+
       {loading ? (
         <Loader />
       ) : (
